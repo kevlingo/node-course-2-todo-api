@@ -5,7 +5,7 @@ let User = mongoose.model('User', {
   email: {
     type: String,
     required: true,
-    minLength: 1,
+    minlength: 1,
     trim: true,
     unique: true,
     validate: {
@@ -16,7 +16,7 @@ let User = mongoose.model('User', {
   password: {
     type: String,
     required: true,
-    minLength: 6
+    minlength: 6
   },
   tokens: [
     {
