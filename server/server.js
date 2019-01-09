@@ -67,7 +67,7 @@ app.delete('/todos/:id', (req, res) => {
 
 app.patch('/todos/:id', (req, res) => {
   let id = req.params.id;
-  var body = _.pick(req.body, ['text', 'completed']);
+  let body = _.pick(req.body, ['text', 'completed']);
 
   if (!ObjectID.isValid(id)) {
     res.status(404).send();
@@ -87,6 +87,15 @@ app.patch('/todos/:id', (req, res) => {
       res.send(todo);
     })
     .catch(e => res.status(400).send());
+});
+
+app.post('/users/', (req, res) => {
+  let body = _.pick(req.body, ['email', 'password']);
+  let user = new User(body);
+  user
+    .save()
+    .then(user => res.send(user))
+    .catch(e => res.status(400).send(e));
 });
 
 app.listen(port, () => {
