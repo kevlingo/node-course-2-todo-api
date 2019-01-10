@@ -94,10 +94,20 @@ app.post('/users/', (req, res) => {
   let user = new User(body);
 
   user
+    .generateAuthToken()
     .save()
-    .then(() => user.generateAuthToken())
-    .then(token => res.header('x-auth', token).send(user))
+    .then(user => res.header('x-auth', user.tokens[0].token).send(user))
     .catch(e => res.status(400).send(e));
+});
+
+app.get('/users/me', (req, res) => {
+  let token = req.header('x-auth');
+
+  User.findByToken(token).then(user => {
+    if (!user) {
+    }
+    res.send(user);
+  });
 });
 
 app.listen(port, () => {
