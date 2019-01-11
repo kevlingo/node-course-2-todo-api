@@ -95,14 +95,31 @@ app.post('/users/', (req, res) => {
   let user = new User(body);
 
   user
-    .generateAuthToken()
     .save()
-    .then(user => res.header('x-auth', user.tokens[0].token).send(user))
-    .catch(e => res.status(400).send(e));
+    .then(() => {
+      return user.generateAuthToken();
+    })
+    .then(token => {
+      res.header('x-auth', token).send(user);
+    })
+    .catch(e => {
+      res.status(400).send(e);
+    });
 });
 
 app.get('/users/me', authenticate, (req, res) => {
   res.send(req.user);
+});
+
+app.post('/users/login', (req, res) => {
+  let email = req.body.email;
+  let password = req.body.password;
+
+  User.findByCredentials(email, password).then(user => {
+    return user
+      .generateAuthToken()
+      .then(token => res.header('x-auth', token).send(user));
+  });
 });
 
 app.listen(port, () => {

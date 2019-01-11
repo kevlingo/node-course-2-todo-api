@@ -59,6 +59,24 @@ UserSchema.statics.findByToken = function(token) {
   });
 };
 
+UserSchema.statics.findByCredentials = function(email, password) {
+  let User = this;
+  return User.findOne({ email }).then(user => {
+    if (!user) {
+      return Promise.reject();
+    }
+    return new Promise((resolve, reject) => {
+      bcrypt.compare(password, user.password, (err, success) => {
+        if (success) {
+          resolve(user);
+        } else {
+          reject();
+        }
+      });
+    });
+  });
+};
+
 UserSchema.methods.generateAuthToken = function() {
   let user = this;
   let access = 'auth';
@@ -68,11 +86,13 @@ UserSchema.methods.generateAuthToken = function() {
         _id: user._id.toHexString(),
         access
       },
-      'secretsauce'
+      'abc123'
     )
     .toString();
   user.tokens = user.tokens.concat([{ access, token }]);
-  return user;
+  return user.save().then(() => {
+    return token;
+  });
 };
 UserSchema.pre('save', function(next) {
   let user = this;
