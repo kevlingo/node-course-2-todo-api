@@ -49,16 +49,14 @@ UserSchema.statics.findByToken = function(token) {
   try {
     decoded = jwt.verify(token, 'secretsauce');
   } catch (e) {
-    console.log(e);
+    return Promise.reject();
   }
 
-  let result = User.findOne({
-    _id: decoded._id,
+  return User.findOne({
+    // _id: decoded._id,
     'tokens.token': token,
     'tokens.access': 'auth'
   });
-
-  return result;
 };
 
 UserSchema.methods.generateAuthToken = function() {
