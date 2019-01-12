@@ -77,6 +77,16 @@ UserSchema.statics.findByCredentials = function(email, password) {
   });
 };
 
+UserSchema.methods.removeToken = function(token) {
+  let user = this;
+
+  return user.update({
+    $pull: {
+      tokens: { token }
+    }
+  });
+};
+
 UserSchema.methods.generateAuthToken = function() {
   let user = this;
   let access = 'auth';
@@ -90,9 +100,10 @@ UserSchema.methods.generateAuthToken = function() {
     )
     .toString();
   user.tokens = user.tokens.concat([{ access, token }]);
-  return user.save().then(() => {
-    return token;
-  });
+  return user
+    .save()
+    .then(() => token)
+    .catch(e => Promise.reject(e));
 };
 UserSchema.pre('save', function(next) {
   let user = this;

@@ -115,11 +115,21 @@ app.post('/users/login', (req, res) => {
   let email = req.body.email;
   let password = req.body.password;
 
-  User.findByCredentials(email, password).then(user => {
-    return user
-      .generateAuthToken()
-      .then(token => res.header('x-auth', token).send(user));
-  });
+  User.findByCredentials(email, password)
+    .then(user => {
+      return user
+        .generateAuthToken()
+        .then(token => res.header('x-auth', token).send(user))
+        .catch(e => res.send(400).send(e));
+    })
+    .catch(e => res.status(401).send(e));
+});
+
+app.delete('/users/me/token', authenticate, (req, res) => {
+  req.user
+    .removeToken(req.token)
+    .then(() => res.status(200).send())
+    .catch(e => res.status(400).send(e));
 });
 
 app.listen(port, () => {
