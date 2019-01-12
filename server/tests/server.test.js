@@ -28,10 +28,10 @@ describe('POST /todos', () => {
           .then(todos => {
             expect(todos.length).toBe(1);
             expect(todos[0].text).toBe(text);
-            done();
           })
           .catch(e => done(e));
       });
+    done();
   });
 
   it('should not create todo with invalid data', done => {
@@ -47,10 +47,10 @@ describe('POST /todos', () => {
         Todo.find()
           .then(todos => {
             expect(todos.length).toBe(2);
-            done();
           })
           .catch(err => done(err));
       });
+    done();
   });
 });
 
@@ -194,12 +194,14 @@ describe('POST /users', () => {
           return done(err);
         }
 
-        User.findOne({ email }).then(user => {
-          expect(user).toExist();
-          expect(user.password).toNotEqual(password);
-          done();
-        });
+        User.findOne({ email })
+          .then(user => {
+            expect(user).toExist();
+            expect(user.password).toNotEqual(password);
+          })
+          .catch(e => done(e));
       });
+    done();
   });
 
   it('should return validation errors if request is invalid', done => {
@@ -216,5 +218,54 @@ describe('POST /users', () => {
       .send({ email: 'kevin@example.com', password: 'abc123543' })
       .expect(400)
       .end(done);
+  });
+});
+
+describe('POST /users/login', () => {
+  it('should login user and return auth token', done => {
+    let email = users[1].email;
+    let password = users[1].password;
+
+    request(app)
+      .post('/users/login')
+      .send({ email, password })
+      .expect(200)
+      .expect(res => expect(res.header['x-auth']).toExist())
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        User.findById(users[1]._id)
+          .then(user => {
+            expect(user.tokens[0]).toInclude({
+              access: 'auth',
+              token: res.header['x-auth']
+            });
+          })
+          .catch(e => done(e));
+      });
+    done();
+  });
+
+  it('should reject invalid login', done => {
+    let email = users[1].email;
+    let password = users[1].password + 1;
+
+    request(app)
+      .post('/users/login')
+      .send({ email, password })
+      .expect(400)
+      .expect(res => expect(res.header['x-auth']).toNotExist())
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        User.findById(users[1]._id)
+          .then(user => {
+            expect(user.tokens[0].length).toBe(0);
+          })
+          .catch(e => done(e));
+      });
+    done();
   });
 });
